@@ -16,4 +16,20 @@
   hosts: all
   # by default these are no-op (empty task list)
   roles: []
-  tasks: []
+  tasks: 
+    - name: Disable SELinux on next reboot
+      replace:
+        path: '/etc/selinux/config'
+        regexp: '^ *SELINUX=.*'
+        replace: 'SELINUX=permissive'
+        backup: yes
+
+    - name: Reboot to enable SELinux
+      # the initial `sleep` command is there to give time to Ansible to
+      # background the task and disconnect; otherwise the SSH connection
+      # is torn by the reboot and Ansible marks the host as "unreachable"
+      shell: |
+        sleep 3;
+        /sbin/shutdown -r now "Rebooting to enable SELinux ...";
+      async: 1
+      poll: 0

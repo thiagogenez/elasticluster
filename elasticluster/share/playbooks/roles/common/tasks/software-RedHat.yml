@@ -25,14 +25,16 @@
       - zip
       # version control systems
       - git
-      - mercurial
-      - subversion
       # basic build environment
       - gcc
       - gcc-c++
       - gcc-gfortran
       - glibc-devel
       - make
+      - openssl-devel
+      - bzip2-devel
+      - libffi-devel
+      - xz-devel 
       # other "standard" utilities
       - bash-completion
       - kexec-tools
@@ -41,4 +43,6 @@
       - screen
       - tmux
       - vim
+      - htop
+      - netcat
     state: '{{ pkg_install_state }}'

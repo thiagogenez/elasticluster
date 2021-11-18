@@ -31,10 +31,10 @@
 - name: Wait for server to come up again
   become: no
   wait_for:
-    host: "{{ ansible_host }}"
-    search_regex: 'OpenSSH'
-    port: 22
-    delay: 10
-    timeout: 300
+    #host: "{{ ansible_host }}"
+    #search_regex: 'OpenSSH'
+    #port: 22
+    #delay: 10
+    timeout: "{{ reboot_waiting_time }}"
   delegate_to: localhost
   when: '_selinux_disable_reboot is not skipped'
