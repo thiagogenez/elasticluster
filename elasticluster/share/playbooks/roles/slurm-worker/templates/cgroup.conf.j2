@@ -16,7 +16,8 @@ AllowedRAMSpace={{ slurm_allowedramspace|default(100) }}
 AllowedSwapSpace={{ slurm_allowedswapspace|default(1) }}
 
 ConstrainCores=yes
-
+TaskAffinity=no
 CgroupAutomount=yes
 CgroupReleaseAgentDir=/etc/slurm/cgroup
 CgroupMountpoint=/sys/fs/cgroup
+CgroupPlugin=autodetect

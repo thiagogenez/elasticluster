@@ -181,3 +181,14 @@
   command: |
     restorecon -r /
   when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'
+
+- name: Install Slurm MOTD
+  tags:
+    - slurm
+  copy:
+    src=etc/motd
+    dest=/etc/motd
+    owner=root
+    group=root
+    mode=0644
+  when: 'is_rhel_compatible'
