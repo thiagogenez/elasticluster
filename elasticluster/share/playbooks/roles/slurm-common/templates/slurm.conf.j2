@@ -16,7 +16,7 @@ ClusterName=elasticluster
 
 
 ####################################################
-## >>>> SLURM NODES
+## >>>> CREATE SLURM NODES
 ####################################################
 
 {% for host in groups.slurm_worker %}
@@ -27,26 +27,22 @@ NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 384}} CP
 
 
 ####################################################
-## >>>> SLURM PARTITIONS
+## >>>> CREATE SLURM PARTITIONS
 ####################################################
+{{''}}
 
-
-PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES LLN=yes
-
-{%- set test = groups.slurm_worker|map('extract', hostvars)|list -%}
-
-{% for t in test %}
-# test - {{t}}
+{%- set worker_prefix = 'worker' -%}
+{% if slurm_worker_partition|default('no') == 'yes' or slurm_worker_partition|default('0') == 1 %}
+{% for partition_name in groups.slurm_worker| map('regex_replace', '-'+worker_prefix+'[0-9]*$') | list | unique %}
+{%- set machines_id = groups.slurm_worker | map ('regex_search', partition_name+'-[a-z]*[0-9]*$') | list | flatten(skip_nulls=True) -%}
+{%-set min_id = machines_id | map('regex_search', '[0-9]*$') | list | min -%}
+{%-set max_id = machines_id | map('regex_search', '[0-9]*$') | list | max -%}
+# {{ partition_name }}
+PartitionName={{ partition_name }}  Nodes={{ partition_name }}-{{ worker_prefix }}[{{ min_id }}-{{ max_id }}] MaxTime=INFINITE State=UP Default=YES LLN=yes
 {% endfor %}
-
-# BLALBALBA
-
-
-{{ groups.slurm_worker|map('regex_replace', '^-_worker(.*)$', '\\1') |list|unique }}
-
-
-# BLALBALBA
-{{elasticluster}}
+{% else %}
+PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES LLN=yes
+{% endif %}
 
 ####################################################
 ## >>>>  SCHEDULER SETTINGS
@@ -223,4 +219,4 @@ SlurmctldParameters=cloud_dns,idle_on_node_suspend
 ### >>>>  EXTRA 
 ####################################################
 
-DisableRootJobs=N
+DisableRootJobs=no
