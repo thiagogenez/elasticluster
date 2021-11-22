@@ -38,7 +38,7 @@ NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 384}} CP
 {%-set min_id = machines_id | map('regex_search', '[0-9]*$') | list | min -%}
 {%-set max_id = machines_id | map('regex_search', '[0-9]*$') | list | max -%}
 # {{ partition_name }}
-PartitionName={{ partition_name }}  Nodes={{ partition_name }}-{{ worker_prefix }}[{{ min_id }}-{{ max_id }}] MaxTime=INFINITE State=UP Default=YES LLN=yes
+PartitionName={{ partition_name }}  Nodes={{ partition_name }}-{{ worker_prefix }}[{{ min_id }}-{{ max_id }}] MaxTime=INFINITE State=UP LLN=yes {% if slurm_default_partition == partition_name %} Default=Yes {% endif %}
 {% endfor %}
 {% else %}
 PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES LLN=yes
