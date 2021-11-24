@@ -721,14 +721,15 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'accelerator_count',
             'accelerator_type',
             'allow_project_ssh_keys',
-            'boot_disk_size',
-            'boot_disk_type',
+            'boot_disk_size',           # openstack too
+            'boot_disk_type',           # openstack too
             'min_cpu_platform',
             'scheduling',
             'tags',
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
+            'delete_on_terminate',
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`

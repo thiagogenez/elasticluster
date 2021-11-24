@@ -10,6 +10,8 @@
       NFS_EXPORTS:
         - path: '/home'
           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+#        - path: '/hps'
+#          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
     - slurm-master
 
 
@@ -23,6 +25,8 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
+#        - fs: '{{groups.slurm_master[0]}}:/hps'
+#          mountpoint: '/hps'
     - slurm-worker
 
 

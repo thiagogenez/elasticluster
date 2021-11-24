@@ -605,7 +605,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 # a non-paravirtualized kernel is being used?  should we allow
                 # to set the boot device as an image parameter?
                 'vda': ('{id}:::{delete_on_terminate}'
-                        .format(id=volume.id, delete_on_terminate=1)),
+                        .format(id=volume.id, delete_on_terminate=int(kwargs.pop('delete_on_terminate'))  if 'delete_on_terminate' else 1 )),
             }
 
         result = None

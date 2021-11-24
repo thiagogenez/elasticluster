@@ -17,12 +17,32 @@
   register: epel_repo_file
 
 
-- name: enable the EPEL repository (RHEL/CentOS)
+- name: Install subscription-manager (RHEL-family)
+  package:
+    name: subscription-manager
+    state: '{{ pkg_install_state }}'
+
+
+- name: Enable the EPEL repository (RHEL/CentOS)
   # based on instructions at: https://support.rackspace.com/how-to/install-epel-and-additional-repositories-on-centos-and-red-hat/
   yum:
     name: 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ansible_distribution_major_version}}.noarch.rpm'
     state: '{{ pkg_install_state }}'
   when: 'not epel_repo_file.stat.exists'
+  
+
+- name: Install the IUS repository (optional) (RHEL/CentOS)
+  # based on instructions at: https://support.rackspace.com/how-to/install-epel-and-additional-repositories-on-centos-and-red-hat/
+  yum:
+    name: 'https://repo.ius.io/ius-release-el{{ansible_distribution_major_version}}.rpm'
+    state: '{{ pkg_install_state }}'
+  
+
+- name: Enable yum plug-in for package replacement to simplify the upgrade process (RHEL-family)
+  # based on instructions at: https://support.rackspace.com/how-to/install-epel-and-additional-repositories-on-centos-and-red-hat/
+  package:
+    name: yum-plugin-replace
+    state: '{{ pkg_install_state }}'
 
 
 # this is required to have packages like `lua-devel` in RHEL, which
