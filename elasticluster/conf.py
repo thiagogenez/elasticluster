@@ -143,6 +143,8 @@ SCHEMA = {
                 # only on OpenStack
                 Optional('floating_network_id'): str,
                 Optional("request_floating_ip"): boolean,
+                Optional("attach_volume_size"): nonnegative_int,
+                Optional("attach_volume_type"): nonempty_str,
                 # allow other string keys w/out restrictions
                 Optional(str): str,
             },
@@ -730,6 +732,8 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'floating_network_id',
             'request_floating_ip',
             'delete_on_terminate',
+            'attach_volume_size',
+            'attach_volume_type'
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`
