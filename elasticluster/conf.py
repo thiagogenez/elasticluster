@@ -145,6 +145,8 @@ SCHEMA = {
                 Optional("request_floating_ip"): boolean,
                 Optional("attach_volume_size"): nonnegative_int,
                 Optional("attach_volume_type"): nonempty_str,
+                Optional("attach_volume_format"): nonempty_str,
+                Optional("attach_volume_delete_on_termination", default=True): boolean,
                 # allow other string keys w/out restrictions
                 Optional(str): str,
             },
@@ -259,7 +261,9 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("request_floating_ip"): boolean,  ## DEPRECATED, place in cluster or node config
         Optional("region_name"): nonempty_str,
         Optional("availability_zone"): nonempty_str,
-        Optional("compute_api_version"): Or('1.1', '2'),
+        # 2.67 to allow `volume_type` when using `block_device_mapping_v2`
+        # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
+        Optional("compute_api_version"): Or('1.1', '2', '2.67'), 
         Optional("image_api_version"): Or('1', '2'),
         Optional("network_api_version"): Or('2.0'),
         Optional("volume_api_version"): Or('1', '2', '3'),
@@ -723,17 +727,18 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'accelerator_count',
             'accelerator_type',
             'allow_project_ssh_keys',
-            'boot_disk_size',           # openstack too
-            'boot_disk_type',           # openstack too
+            'boot_disk_size',           
+            'boot_disk_type',           
             'min_cpu_platform',
             'scheduling',
             'tags',
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
-            'delete_on_terminate',
             'attach_volume_size',
-            'attach_volume_type'
+            'attach_volume_type',
+            'attach_volume_format',
+            'attach_volume_delete_on_termination'
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`

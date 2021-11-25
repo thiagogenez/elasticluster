@@ -563,70 +563,25 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             nics = None
         vm_start_args['nics'] = nics
 
-        log.info(kwargs)
-        if 'boot_disk_size' in kwargs or 'attach_volume_size' in kwargs:
-            vm_start_args['block_device_mapping'] = {}
 
-            for disk in ['boot_disk_size', 'attach_volume_size']:
-                
-                # jump if there is not no requirement for this type of disk
-                if disk not in kwargs:
-                    continue
+        # by default, bootable disk will be automatically included into this list when `image_id` is set, which is our case here
+        # forcing using `block_device_mapping_v2` by describing `vm_start_args['block_device_mapping'] = None`
+        # https://github.com/openstack/python-novaclient/blob/d3b4c01ea4e6e5c4bca9e961a36806b533faa9ac/novaclient/v2/servers.py#L792-L796
+        vm_start_args['block_device_mapping'] = None
+        vm_start_args['block_device_mapping_v2'] = []
 
-                # grab disk type
-                type = '__DEFAULT__'
-                if 'boot_disk_type' in kwargs:
-                    type = kwargs.pop('boot_disk_type')
-                elif 'attach_volume_type' in kwargs:
-                    type = kwargs.pop('attach_volume_type')
-
-                # check if the backing volume is already there
-                volume_name = '{name}-{id}-{type}'.format(name=node_name, id=image_id, type=disk)
-                if volume_name in self._get_volumes():
-                    raise ImageError(
-                        "Volume `{0}` already exists in project `{1}` of cloud {2}"
-                        .format(volume_name, self._os_tenant_name, self._os_auth_url))
-
-                log.info('Creating volume `%s` to use as VM disk ...', volume_name)
-                try:
-                    bds = int(kwargs[disk])
-                    if bds < 1:
-                        raise ValueError('non-positive int')
-                except (ValueError, TypeError):
-                    raise ConfigurationError(
-                        "Invalid `{0}` specified:"
-                        " should be a positive integer, got {1} instead"
-                        .format(disk, kwargs[disk]))
-                volume = self.cinder_client.volumes.create(
-                    size=bds, name=volume_name, imageRef=image_id,
-                    volume_type=type)
-
-                # wait for volume to come up
-                waited = 0
-                while waited < max_wait:
-                    volumes = self._get_volumes()
-                    if (volume_name in volumes
-                        and volumes[volume_name].status == 'available'):
-                            break
-                    sleep(1)  # FIXME: hard-coded waiting time
-                    waited += 1
-                if waited >= max_wait:
-                    raise RuntimeError(
-                        "Volume `{0}` (ID: {1}) didn't come up in {2:d} seconds"
-                        .format(volume_name, volume.id, max_wait))
-
-                # FIXME: is it possible that `vda` is not the boot disk? e.g. if
-                # a non-paravirtualized kernel is being used?  should we allow
-                # to set the boot device as an image parameter?
-                device = 'vda'
-                if 'volume' in disk:
-                    device = 'vdb'
-                # ok, use volume as VM disk
-                vm_start_args['block_device_mapping'].update({
-                    device: ('{id}:::{delete_on_terminate}'
-                        .format(id=volume.id, delete_on_terminate=int(kwargs.pop('delete_on_terminate'))  if 'delete_on_terminate' in kwargs else 1 )),
+        if 'attach_volume_size' in kwargs and 'attach_volume_type' in kwargs:
+                # for more info about combinations between `source_type` and `destination_type`
+                # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
+                vm_start_args['block_device_mapping_v2'].append({
+                    'source_type': 'blank',
+                    'destination_type': 'volume',
+                    'volume_type': kwargs.pop('attach_volume_type'),
+                    'guest_format': kwargs.pop('attach_volume_format') if 'attach_volume_format' in kwargs else 'ext4',
+                    'boot_index': -1,
+                    'delete_on_termination': True,
+                    'volume_size': int(kwargs.pop('attach_volume_size'))
                 })
-                log.info(vm_start_args['block_device_mapping'])
 
         result = None
         retry = 2  # FIXME: should this be configurable?
