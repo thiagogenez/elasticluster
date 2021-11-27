@@ -2,3 +2,6 @@
 
 # whether to disable SELinux altogether (RHEL/CentOS only)
 disable_selinux: no
+
+# wheter the host has another volume to be attached
+attach_volume: no

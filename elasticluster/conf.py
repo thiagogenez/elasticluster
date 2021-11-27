@@ -146,7 +146,7 @@ SCHEMA = {
                 Optional("attach_volume_size"): nonnegative_int,
                 Optional("attach_volume_type"): nonempty_str,
                 Optional("attach_volume_format"): nonempty_str,
-                Optional("attach_volume_delete_on_termination", default=True): boolean,
+                Optional("attach_volume_delete_on_termination", default='yes'): str,
                 # allow other string keys w/out restrictions
                 Optional(str): str,
             },
