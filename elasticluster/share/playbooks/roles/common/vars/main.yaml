@@ -1,7 +1,5 @@
 ---
-
-attach_volume: '{{ attach_volume }}'
-
+# So far, one device only is supported for attachment!
 DEVICES:
   - path: '{{ attach_volume_device_path }}' 
     number: '{{ attach_volume_number }}' 

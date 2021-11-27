@@ -1,59 +1,35 @@
 ---
 #
-# Format and
+# Format anc create a new volume
 #
 
 - name: Does device '{{device.path}}' exists?
-  stat:
-    path: '{{device.path}}'
-    get_attributes: no
-    get_checksum: no
-    get_mime: no
-  register: disk_status
+  ansible.builtin.command: lsblk -n -o TYPE '{{device.path}}'
 
 
-- name: Is the partition '{{device.path}}{{device.number}}' exists?
-  stat:
-    path: '{{device.path}}{{device.number}}'
-    get_checksum: no
-    get_attributes: no
-    get_mime: no
-  register: partition_status
-
-
-- name: Is the volume '{{device.mountpoint}}' mounted?
-  ansible.builtin.command: findmnt -rno SOURCE,TARGET '{{device.path}}{{device.number}}'
-  register: mount_check
-
-
-- name: Create partition {{device.path}}{{device.number}} using the `parted`` command line tool
+- name: Create partition {{device.path}}{{device.number}} if it doesn't exist with {{device.fs_type}} filesystem
   community.general.parted:
     device: '{{device.path}}'
     number: '{{device.number}}'
     state: present
     fs_type: '{{device.fs_type}}'
-  when: 'disk_status.stat.exists and not partition_status.stat.exists and mount_check.rc == 1'
 
 
-- name: Get the filesystem of the device {{device.path}}{{device.number}} 
-  ansible.builtin.command: blkid '{{device.path}}{{device.number}}' -s TYPE -o value
-  register: fs_type_check
-  #when: 'disk_status.stat.exists and partition_status.stat.exists and not mount_check.stdout_lines[0] is defined'
+- name: Check if the device {{device.path}}{{device.number}} already contains a monted volume '{{device.mountpoint}}'
+  ansible.builtin.command: lsblk -n -o MOUNTPOINT '{{device.path}}{{device.number}}'
+  register: already_mounted_check
 
 
-- name: Format the device '{{device.path}}{{device.number}}' using '{{device.fs_type}}' filesystem 
-  community.general.filesystem:
-    fstype: '{{device.fs_type}}'
-    force: yes
-    dev: '{{device.path}}{{device.number}}'
-    state: present
-  when: 'partition_status.stat.exists and fs_type_check != device.fs_type and mount_check.rc == 1'
+- name: Sanity check for the requested path "{{device.mountpoint}}"
+  fail:
+    msg: Volume 'already_mounted_check.stdout_lines[0]' is already mounted and it differs from the requested "{{device.mountpoint}}"
+  when: 'already_mounted_check.stdout_lines[0] is defined and already_mounted_check.stdout_lines[0] != device.mountpoint'
 
 
 - name: Get the UUID of the device {{device.path}}{{device.number}} 
   ansible.builtin.command: blkid '{{device.path}}{{device.number}}' -s UUID -o value
   register: uuid_check
-  when: 'disk_status.stat.exists and partition_status.stat.exists'
+  when: 'already_mounted_check.stdout_lines[0] is not defined '
 
 
 - name: Mount new volumes and create fstab entries
