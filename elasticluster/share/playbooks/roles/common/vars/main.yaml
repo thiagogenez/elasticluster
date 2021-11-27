@@ -1,9 +1,4 @@
 ---
 # So far, one device only is supported for attachment!
-DEVICES:
-  - path: '{{ attach_volume_device_path }}' 
-    number: '{{ attach_volume_number }}' 
-    opts: '{{ attach_volume_opts }}' 
-    fs_type: '{{ attach_volume_fs_type }}' 
-    mountpoint: '{{ attach_volume_mountpoint }}'
+DEVICES: '{{ attach_volume }}'
 
