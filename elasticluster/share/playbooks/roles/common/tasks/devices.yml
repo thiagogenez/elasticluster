@@ -12,7 +12,12 @@
     device: '{{device.path}}'
     number: '{{device.number}}'
     state: present
-    fs_type: '{{device.fs_type}}'
+  
+- name: Create a '{{device.fs_type}}' filesystem on {{device.path}}{{device.number}}
+  community.general.filesystem:
+    force: no
+    fstype: '{{device.fs_type}}'
+    dev: '{{device.path}}{{device.number}}'
 
 
 - name: Check if the device {{device.path}}{{device.number}} already contains a monted volume '{{device.mountpoint}}'

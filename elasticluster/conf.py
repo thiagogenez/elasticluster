@@ -143,11 +143,7 @@ SCHEMA = {
                 # only on OpenStack
                 Optional('floating_network_id'): str,
                 Optional("request_floating_ip"): boolean,
-                Optional("attach_volume_size"): nonnegative_int,
-                Optional("attach_volume_type"): nonempty_str,
-                Optional("attach_volume_format"): nonempty_str,
-                Optional("attach_volume_delete_on_termination", default='yes'): str,
-                # allow other string keys w/out restrictions
+                Optional("attach_volumes"): str,  # FIXME: Validator is missing
                 Optional(str): str,
             },
         },
@@ -735,10 +731,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
-            'attach_volume_size',
-            'attach_volume_type',
-            'attach_volume_format',
-            'attach_volume_delete_on_termination'
+            'attach_volumes',
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`

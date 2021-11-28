@@ -1,4 +1,4 @@
 ---
 # So far, one device only is supported for attachment!
-DEVICES: '{{ attach_volume }}'
+DEVICES: '{{ attach_volumes }}'
 

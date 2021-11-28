@@ -33,6 +33,7 @@ import os
 import threading
 from warnings import warn
 from time import sleep
+from yaml import safe_load
 
 # External modules
 
@@ -571,21 +572,29 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         vm_start_args['block_device_mapping'] = None
         vm_start_args['block_device_mapping_v2'] = []
 
-        if 'attach_volume_size' in kwargs and 'attach_volume_type' in kwargs:
-                # for more info about combinations between `source_type` and `destination_type`
-                # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
-                if 'attach_volume_delete_on_termination' not in kwargs:
-                    raise ValueError('empty string `attach_volume_delete_on_termination`')
+        if 'attach_volumes' in kwargs:
+                volumes = safe_load(kwargs.pop('attach_volumes'))
 
-                vm_start_args['block_device_mapping_v2'].append({
-                    'source_type': 'blank',  # >>> volume came without partition and filesystem configured
-                    'destination_type': 'volume',
-                    'volume_type': kwargs.pop('attach_volume_type'),
-                    'guest_format': kwargs.pop('attach_volume_format'),
-                    'boot_index': -1,
-                    'delete_on_termination': bool(strtobool(kwargs.pop('attach_volume_delete_on_termination'))),
-                    'volume_size': int(kwargs.pop('attach_volume_size'))
-                })
+                for volume in volumes:
+                    # for more info about combinations between `source_type` and `destination_type`
+                    # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
+                    if 'delete_on_termination' not in volume:
+                        raise ValueError('empty string `delete_on_termination`; Enter "yes" or "no" (default) to delete the volume/block device upon termination of the instance.')
+                    
+                    if "volume_size" not in volume:
+                        raise ValueError('empty string `size`; Enter the size of the volume to create (in gigabytes).')
+                    
+                    if 'volume_type' not in volume:
+                        raise ValueError('empty string `volume_type`; Enter the volume type that will be used, for example SSD or HDD storage (check OpenStack for the correct names).')
+
+                    vm_start_args['block_device_mapping_v2'].append({
+                        'source_type': 'blank',  # >>> volume came without partition and filesystem configured
+                        'destination_type': 'volume',
+                        'volume_type': volume['volume_type'],
+                        'boot_index': -1,
+                        'delete_on_termination': bool(strtobool(volume['delete_on_termination'])),
+                        'volume_size': int(volume['volume_size'])
+                    })
 
         result = None
         retry = 2  # FIXME: should this be configurable?
