@@ -11,7 +11,7 @@
   vars:
     device: '{{item}}'
   when: 'item is defined'
-  loop: '{{DEVICES  | from_yaml }}'
+  loop: '{{DEVICES  | from_yaml | default([]) }}'
 
 
 - include_tasks: hosts.yml

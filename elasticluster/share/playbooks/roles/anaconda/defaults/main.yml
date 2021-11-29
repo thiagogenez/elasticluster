@@ -20,4 +20,9 @@ anaconda_cleanup : False
 # the first match in users' shell $PATH
 anaconda_in_path: True
 
+# anaconda prefix
 anaconda_install_path: '/opt'
+
+# how will be the owner of `anaconda_home`?
+anaconda_username: 'anaconda'
+anaconda_groupname: 'anaconda'

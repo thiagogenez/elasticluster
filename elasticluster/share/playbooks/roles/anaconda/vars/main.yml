@@ -8,3 +8,4 @@ anaconda_installer_sh : '{{ansible_env.TMPDIR|default("/var/tmp")}}/{{anaconda_n
 anaconda_installer_url : '{{anaconda_mirror}}/{{anaconda_name}}.sh'
 anaconda_platform : 'Linux-{{ansible_architecture}}'
 anaconda_home: "{{anaconda_install_path|default('/opt')}}/{{anaconda_name}}"
+anaconda_shared: '{{anaconda_install_path}}/shared/conda'

@@ -26,6 +26,7 @@
     name: slurm
     group: slurm
     system: yes
+    create_home: no
   tags:
     - slurm
 
