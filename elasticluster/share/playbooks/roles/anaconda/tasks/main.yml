@@ -15,7 +15,7 @@
   user:
     name: '{{anaconda_username}}'
     system: yes
-    create_home: no
+    create_home: yes
 
 
 - name: Download Anaconda installer script
@@ -58,21 +58,29 @@
     - opt
     - '{{anaconda_install_path}}'
 
+- name: Update conda
+  ansible.builtin.command: '{{anaconda_home}}/bin/conda update -y {{item}}'
+  loop:
+    - conda
+#    - anaconda
+#    - --all
+
+- name: Customise system conda
+  ansible.builtin.command: '{{anaconda_home}}/bin/conda config --system --set {{item.key}} {{item.value}}'
+  loop: '{{ anaconda_system_config  | from_yaml | default([]) }}'
+  when: 'item is defined' 
 
 - name: Add extra channels
-  ansible.builtin.command: '{{anaconda_home}}/bin/conda config --add channels {{item}}'
+  ansible.builtin.command: '{{anaconda_home}}/bin/conda config --system --add channels {{item}}'
   loop: '{{anaconda_extra_channels  | from_yaml | default(["defaults"]) }}'
   when: 'item is defined'
 
-- name: Update anaconda and conda itself
-  ansible.builtin.command: '{{anaconda_home}}/bin/conda update -y conda anaconda'
-
-- name: Update all packages
-  ansible.builtin.command: '{{anaconda_home}}/bin/conda update --all -y'
-
-
+##
+## Thanks to https://medium.com/@pjptech/installing-anaconda-for-multiple-users-650b2a6666c6
+## to make conda a multi-user environment
+##
 - name: Explicitly change the ownership of the '{{anaconda_home}}' folder, and all subfolders, from root to ‘anaconda’,
-  ansible.builtin.command: chown -R anaconda:anaconda '{{anaconda_home}}'
+  ansible.builtin.command: chown -R '{{anaconda_username}}':'{{anaconda_username}}' '{{anaconda_home}}'
 
 - name: Explicitly remove write permission for ‘group’ and ‘others’ — we don’t want them messing up our anaconda directory!
   ansible.builtin.command: chmod -R go-w '{{anaconda_home}}'
@@ -91,9 +99,10 @@
   ansible.builtin.command: chmod -R oug+rwx '{{anaconda_shared}}/..'    
 
   
-- name: Install shared_env with extra packages [{{anaconda_extra_packages | from_yaml |join(" ") }}] in a shared environment
-  ansible.builtin.command: '{{anaconda_home}}/bin/conda -n shared_env -y {{anaconda_extra_packages | from_yaml |join(" ") }}'
-  when: 'anaconda_extra_packages is defined'
+- name: Create conda shared_env
+  ansible.builtin.command: '{{anaconda_home}}/bin/conda create -n {{item.name}} -y {{item.pkgs | from_yaml |join(" ") }}'
   become: yes
   become_user: '{{anaconda_username}}'
-
+  loop: '{{anaconda_shared_env| from_yaml }}'
+  when: 'item is defined'
+  

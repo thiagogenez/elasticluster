@@ -10,10 +10,10 @@ export PATH="${ANACONDA_HOME}/bin:${PATH}"
 export PYTHON{{anaconda_python_version}}="{{anaconda_home}}/bin/python{{anaconda_python_version}}"
 
 
-# Shared environtment 
+# HACKY: Shared environtment 
 if [ $UID != 0 ] && [ "$USER" != {{anaconda_username}} ]; then
     export ANACONDA_SHARED_HOME="{{anaconda_shared}}"
     export CONDA_PKGS_DIRS="{{anaconda_shared}}/pkgs","{{anaconda_home}}/pkgs","/home/$USER/.conda/pkgs"
     export CONDA_ENVS_DIRS="{{anaconda_shared}}/$USER/envs"
-    [ -d "{{anaconda_shared}}"/$USER/envs ] || mkdir -p -m=00755 "{{anaconda_shared}}"/$USER/envs
+    [ -d "{{anaconda_shared}}"/$USER/envs ] || mkdir -p -m=00755 "{{anaconda_shared}}"/$USER/envs && chmod 00755 "{{anaconda_shared}}"/$USER
 fi

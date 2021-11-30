@@ -13,7 +13,10 @@
   tags:
     - before
     - local
-  hosts: all
-  # by default these are no-op (empty task list)
+  hosts: slurm_master
   roles: []
-  tasks: []
+  tasks: 
+    - name: Add users
+      ansible.builtin.command: echo "{item}"
+      loop: '{{final_users | from_yaml }}'
+
