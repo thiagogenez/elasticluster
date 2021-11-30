@@ -11,7 +11,7 @@
     backup: yes
 
 - name: Disable SELinux now
-  selinux:
+  ansible.posix.selinux:
     state: disabled
   register: '_selinux_disable_now'
 
