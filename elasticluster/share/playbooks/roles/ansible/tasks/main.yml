@@ -22,12 +22,12 @@
 
 # finally, install Ansible
 - name: Install Ansible
-  package:
+  ansible.builtin.package:
     name: "{% if ANSIBLE_VERSION == 'LATEST' %}ansible{% else %}ansible{{__at__}}{{ANSIBLE_VERSION}}{% endif %}"
     state: "{% if ANSIBLE_VERSION == 'LATEST' or upgrade_packages|default(False) %}latest{% else %}present{% endif %}"
 
 - name: Create default Ansible inventory
-  template:
-    src=inventory.j2
-    dest='/etc/ansible/hosts'
-    mode=0444
+  ansible.builtin.template:
+    src: inventory.j2
+    dest: '/etc/ansible/hosts'
+    mode: 0444

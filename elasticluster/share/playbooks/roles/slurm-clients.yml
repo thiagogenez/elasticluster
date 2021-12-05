@@ -1,0 +1,33 @@
+---
+
+- name: Slurm worker nodes Playbook
+  hosts: '{{host}}'
+  tasks: 
+    - name: Include the NIS role
+      include_role:
+        name: 'nis'
+      vars:
+        NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: 'multiuser_cluster|default("true")|bool'
+    - name: Create the values for the variable NFS_MOUNTS
+      vars:
+        server: "{{ groups.slurm_master[0] }}" 
+      set_fact:
+        nfs_mount:
+          fs: '{{server}}:{{item.server_path}}'
+          mountpoint: '{{item.client_mountpoint}}'
+      loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}'
+      register: NFS_MOUNTS_TMP
+    - name: Include the NFS-client role
+      include_role:
+        name: 'nfs-client'
+      vars:
+        NFS_MOUNTS: "{{ NFS_MOUNTS_TMP.results | map(attribute='ansible_facts.nfs_mount') | list | to_json }}"
+    - name: Include the 'slurm-worker' role
+      include_role:
+        name: 'slurm-worker'
+      when: host == "slurm_worker"
+    - name: Include the 'slurm-client' role
+      include_role:
+        name: 'slurm-client'
+      when: host == "slurm_submit:slurm_client"

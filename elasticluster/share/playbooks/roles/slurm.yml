@@ -2,59 +2,80 @@
 
 - name: Slurm master Playbook
   hosts: slurm_master
-  roles:
-    - role: 'nis'
-      NIS_MASTER: "{{groups.slurm_master[0]}}"
+  tasks:
+    - name: Include the NIS role
+      include_role:
+        name: 'nis'
+      vars:
+        NIS_MASTER: "{{groups.slurm_master[0]}}"
       when: 'multiuser_cluster|default("true")|bool'
-    - role: 'nfs-server'
-      NFS_EXPORTS:
-        - path: '/home'
-          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
-    - slurm-master
-
+    - name: Create the values for the variable NFS_EXPORTS 
+      vars: 
+        clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+      set_fact:
+        nsf_export: 
+          path: "{{ item.server_path }}" 
+          clients: "{{ clients }}"  
+      loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}' 
+      register: NFS_EXPORTS_TMP
+    - name: bla
+      debug:
+        msg: "{{ NFS_EXPORTS_TMP.results | map(attribute='ansible_facts.nsf_export') | list }}"
+    - name: Include the NFS-server role
+      include_role:
+        name: 'nfs-server'
+      vars: 
+        NFS_EXPORTS: "{{ NFS_EXPORTS_TMP.results | map(attribute='ansible_facts.nsf_export') | list | to_json }}"
+    - name: Include the 'slurm-master' role
+      include_role:
+        name: 'slurm-master'
 
 - name: Slurm worker nodes Playbook
-  hosts: slurm_worker
-  roles:
-    - role: 'nis'
-      NIS_MASTER: "{{groups.slurm_master[0]}}"
-      when: 'multiuser_cluster|default("true")|bool'
-    - role: 'nfs-client'
-      NFS_MOUNTS:
-        - fs: '{{groups.slurm_master[0]}}:/home'
-          mountpoint: '/home'
-    - slurm-worker
+  import_playbook: slurm-clients.yml
+  vars:
+    host: slurm_worker
 
 
-- name: Slurm submit nodes Playbook
-  hosts: slurm_submit:slurm_client
-  roles:
-    - role: 'nis'
-      NIS_MASTER: "{{groups.slurm_master[0]}}"
-      when: 'multiuser_cluster|default("true")|bool'
-    - role: 'nfs-client'
-      NFS_MOUNTS:
-        - fs: '{{groups.slurm_master[0]}}:/home'
-          mountpoint: '/home'
-    - slurm-client
+- name: Slurm client nodes Playbook
+  import_playbook: slurm-clients.yml
+  vars:
+    host: slurm_submit:slurm_client
+
+
+
+
+
+
+
+#- name: Slurm submit nodes Playbook
+#  hosts: slurm_submit:slurm_client
+#  roles:
+#    - role: 'nis'
+#      NIS_MASTER: "{{groups.slurm_master[0]}}"
+#      when: 'multiuser_cluster|default("true")|bool'
+#    - role: 'nfs-client'
+#      NFS_MOUNTS:
+#        - fs: '{{groups.slurm_master[0]}}:/home'
+#          mountpoint: '/home'
+#    - slurm-client
 
 
 - name: Restart SLURMd after all config is done
   hosts: slurm_worker
   tasks:
-    - service:
-        name=slurmd
-        state=restarted
+    - ansible.builtin.service:
+        name: slurmd
+        state: restarted
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-    - service:
-        name=slurm-llnl
-        state=restarted
+    - ansible.builtin.service:
+        name: slurm-llnl
+        state: restarted
       when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-    - service:
-        name=slurmd
-        state=restarted
+    - ansible.builtin.service:
+        name: slurmd
+        state: restarted
       when: is_rhel7_compatible
-    - service:
-        name=slurm
-        state=restarted
+    - ansible.builtin.service:
+        name: slurm
+        state: restarted
       when: is_rhel6_compatible

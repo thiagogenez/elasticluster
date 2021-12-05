@@ -13,7 +13,7 @@
   tags:
     - nfs
     - nfs-server
-  package:
+  ansible.builtin.package:
     pkg: '{{nfs_server_packages}}'
     state: '{{ pkg_install_state }}'
 
@@ -71,7 +71,7 @@
   tags:
     - nfs
     - nfs-server
-  service:
+  ansible.builtin.service:
     name: '{{item}}'
     enabled: yes
     state: '{{_nfs_server_started_state}}'

@@ -24,31 +24,31 @@
 
 
 - name: Ensure `rpcbind` is running (Debian)
-  service:
-    name=rpcbind
-    enabled=yes
-    state=started
+  ansible.builtin.service:
+    name: rpcbind
+    enabled: yes
+    state: started
   when: is_debian
 
 - name: Ensure `rpcbind` is running (RHEL-compatible)
-  service:
-    name=rpcbind
-    enabled=yes
-    state=started
+  ansible.builtin.service:
+    name: rpcbind
+    enabled: yes
+    state: started
   when: is_rhel_compatible
 
 - name: Ensure `portmap` is running (Ubuntu prior to 14.04)
-  service:
-    name=portmap
-    enabled=yes
-    state=started
+  ansible.builtin.service:
+    name: portmap
+    enabled: yes
+    state: started
   when: is_ubuntu and not is_ubuntu_14_04_or_later
 
 - name: Ensure `rpcbind` is running (Ubuntu 14.04 or newer)
-  service:
-    name=rpcbind
-    enabled=yes
-    state=started
+  ansible.builtin.service:
+    name: rpcbind
+    enabled: yes
+    state: started
   when: is_ubuntu_14_04_or_later
 
 
