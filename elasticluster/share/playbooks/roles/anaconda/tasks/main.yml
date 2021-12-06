@@ -17,7 +17,6 @@
     system: yes
     create_home: yes
 
-
 - name: Download Anaconda installer script
   get_url:
     url: '{{anaconda_installer_url}}'
@@ -47,15 +46,25 @@
     group: root
   when: anaconda_in_path
 
+- name: Transfer `anaconda{{anaconda_python_version}}.sh` to {{groups.slurm_submit}}
+  synchronize:
+    mode: push
+    src: '/etc/profile.d/anaconda{{anaconda_python_version}}.sh'
+    dest: "{{hostvars[item].ansible_default_ipv4.address}}:/etc/profile.d/anaconda{{anaconda_python_version}}.sh"
+  delegate_to: "{{ groups.slurm_master[0] }}"
+  loop: "{{groups.slurm_submit }}"
+  when: anaconda_centralised
+  
+
 - name: Make convenience symlink to Anaconda home
   ansible.builtin.file:
-    dest: '/{{item}}/anaconda{{anaconda_python_version}}'
+    dest: '{{item}}/anaconda{{anaconda_python_version}}'
     src: '{{anaconda_home}}'
     state: link
     owner: '{{anaconda_username}}'
     group: '{{anaconda_groupname}}'
   loop:
-    - opt
+    - /opt
     - '{{anaconda_install_path}}'
 
 - name: Update conda

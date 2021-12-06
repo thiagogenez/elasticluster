@@ -6,7 +6,7 @@
 # Use Anaconda Python as the first Python interpreter in $PATH,
 # instead of the one provided by the Linux distribution.
 export ANACONDA_HOME="{{anaconda_home}}"
-export PATH="${ANACONDA_HOME}/bin:${PATH}"
+export PATH="{{anaconda_home}}/bin:${PATH}"
 export PYTHON{{anaconda_python_version}}="{{anaconda_home}}/bin/python{{anaconda_python_version}}"
 
 

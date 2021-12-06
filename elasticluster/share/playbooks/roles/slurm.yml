@@ -43,23 +43,6 @@
 
 
 
-
-
-
-
-#- name: Slurm submit nodes Playbook
-#  hosts: slurm_submit:slurm_client
-#  roles:
-#    - role: 'nis'
-#      NIS_MASTER: "{{groups.slurm_master[0]}}"
-#      when: 'multiuser_cluster|default("true")|bool'
-#    - role: 'nfs-client'
-#      NFS_MOUNTS:
-#        - fs: '{{groups.slurm_master[0]}}:/home'
-#          mountpoint: '/home'
-#    - slurm-client
-
-
 - name: Restart SLURMd after all config is done
   hosts: slurm_worker
   tasks:

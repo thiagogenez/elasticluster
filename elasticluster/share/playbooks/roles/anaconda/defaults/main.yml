@@ -26,3 +26,6 @@ anaconda_install_path: '/opt'
 # how will be the owner of `anaconda_home`?
 anaconda_username: 'anaconda'
 anaconda_groupname: 'anaconda'
+
+# Wheter conda is centrailised on the controller node
+anaconda_centralised: True

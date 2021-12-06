@@ -24,6 +24,37 @@
         replace: 'SELINUX=permissive'
         backup: yes
 
+
+## HACKY
+- name: Reboot SLURM Controller  
+  tags:
+    - after
+    - local
+  hosts: slurm_master
+  tasks:
+    - name: Reboot to enable SELinux
+      # the initial `sleep` command is there to give time to Ansible to
+      # background the task and disconnect; otherwise the SSH connection
+      # is torn by the reboot and Ansible marks the host as "unreachable"
+      shell: |
+        sleep 3;
+        /sbin/shutdown -r now "Rebooting to enable SELinux ...";
+      async: 1
+      poll: 0
+    - name: Wait for the reboot to complete if there was a change.
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300
+
+## HACKY
+- name: Reboot SLURM worker and login nodes
+  tags:
+    - after
+    - local
+  hosts: "{{groups.slurm_worker + groups.slurm_submit}}"
+  tasks:
     - name: Reboot to enable SELinux
       # the initial `sleep` command is there to give time to Ansible to
       # background the task and disconnect; otherwise the SSH connection
