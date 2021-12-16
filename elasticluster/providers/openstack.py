@@ -571,31 +571,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # https://github.com/openstack/python-novaclient/blob/d3b4c01ea4e6e5c4bca9e961a36806b533faa9ac/novaclient/v2/servers.py#L792-L796
         vm_start_args['block_device_mapping'] = None
         vm_start_args['block_device_mapping_v2'] = []
-
-        if 'attach_volumes' in kwargs:
-                volumes = safe_load(kwargs.pop('attach_volumes'))
-
-                for volume in volumes:
-                    # for more info about combinations between `source_type` and `destination_type`
-                    # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
-                    if 'delete_on_termination' not in volume:
-                        raise ValueError('empty string `delete_on_termination`; Enter "yes" or "no" (default) to delete the volume/block device upon termination of the instance.')
-                    
-                    if "volume_size" not in volume:
-                        raise ValueError('empty string `size`; Enter the size of the volume to create (in gigabytes).')
-                    
-                    if 'volume_type' not in volume:
-                        raise ValueError('empty string `volume_type`; Enter the volume type that will be used, for example SSD or HDD storage (check OpenStack for the correct names).')
-
-                    vm_start_args['block_device_mapping_v2'].append({
-                        'source_type': 'blank',  # >>> volume came without partition and filesystem configured
-                        'destination_type': 'volume',
-                        'volume_type': volume['volume_type'],
-                        'boot_index': -1,
-                        'delete_on_termination': bool(strtobool(volume['delete_on_termination'])),
-                        'volume_size': int(volume['volume_size'])
-                    })
-
+                
         result = None
         retry = 2  # FIXME: should this be configurable?
         while retry > 0:
@@ -622,6 +598,27 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             if vm.status == 'ACTIVE':
                 log.debug("Started VM instance `%s` (%s)", vm.name, vm.id)
                 result = { 'instance_id': vm.id }
+
+                # attach volumes in FIFO basis, vdX, where X = {a,b,c,...,} 
+                if 'attach_volumes' in kwargs:
+                    volumes_to_attach = safe_load(kwargs['attach_volumes'])
+
+                    if 'existing_volumes' in volumes_to_attach:
+                        log.debug("Attaching existing volumes to `%s` (%s)", vm.name, vm.id)
+                        # attach
+                        self._create_attachments(vm, volumes_to_attach['existing_volumes'], check_existing_volumes=True)
+                    
+                    if 'new_volumes' in volumes_to_attach:
+                        log.debug("Creating new volumes to `%s` (%s)", vm.name, vm.id)
+                        # create requested volumes
+                        new_volumes = self._create_volumes(volumes_to_attach['new_volumes'], 20)
+                        #attach
+                        self._create_attachments(vm, new_volumes, check_existing_volumes=False)
+
+                # update the list for the yaml file
+                existing_volumes = self._get_attached_volumes(vm.id)
+                result['devices'] = existing_volumes
+
                 if self.use_anti_affinity_groups:
                     result['anti_affinity_group_id'] = group_id
                 break  # out of `while retry > 0:`
@@ -1048,11 +1045,112 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # no fault, or fault message unspecified
             return None
 
-    def _get_volumes(self):
+    def _get_volumes(self, id_as_key=False):
         """Return list of available volumes."""
         self._init_os_api()
+
+        if id_as_key:
+            return dict((volume.id, volume)
+                    for volume in self.cinder_client.volumes.list())
+        
         return dict((volume.name, volume)
                     for volume in self.cinder_client.volumes.list())
+
+
+    def _create_attachments(self, vm, volumes_to_attach, check_existing_volumes=False, id_as_key=False):
+        """Attach existing volumes to the VM"""
+        
+        # if need to check
+        existing_volumes = self._get_volumes(id_as_key=False) if check_existing_volumes else None
+
+        # which parameter to use?
+        attribute = 'id' if id_as_key else 'name'
+
+        for volume in volumes_to_attach:
+            
+            # get the volume object
+            if check_existing_volumes:
+                
+                if volume[attribute] not in existing_volumes:
+                    raise RuntimeError("Volume name '{0}' not found in the list '{1}'\n".format(volume[attribute] , existing_volumes))
+                    continue
+
+                vol = existing_volumes[volume[attribute]]
+                log.debug("Attaching existing volume.id={0} with volume.status={1} to vm.name={2}, vm.id={3}".format(vol.id, vol.status, vm.name, vm.id))
+        
+            else:
+                vol = volume['volume']
+                log.debug("Attaching new volume volume.id={0} with volume.status={1} to vm.name={2}, vm.id={3}".format(vol.id, vol.status, vm.name, vm.id))
+
+            # check if is available
+            if vol.status != 'available':
+                raise RuntimeError("Volume name='{0}' id='{1}' status={2}\n".format(vol.name, vol.id, vol.status))
+                continue
+
+            # delete_on_termination ?
+            delete_on_termination = volume['delete_on_termination'] if 'delete_on_termination' in volume else False
+
+            # sanity check passed, attach the volume
+            # https://github.com/openstack/python-novaclient/blob/d3b4c01ea4e6e5c4bca9e961a36806b533faa9ac/novaclient/v2/volumes.py#L89
+            self.nova_client.volumes.create_server_volume(server_id=vm.id, volume_id=vol.id, delete_on_termination=delete_on_termination)
+            log.debug("Attaching volume volume.id={0} with volume.status={1} to vm.name={2}, vm.id={3} => DONE!".format(vol.id, vol.status, vm.name, vm.id))
+
+
+    def _create_volumes(self, volumes_to_create, max_wait=100):
+        """Create new volumes"""
+        volumes_to_attach = []
+        for volume in volumes_to_create:
+            
+            waited = 0
+
+            #sanity check
+            if 'delete_on_termination' not in volume:
+                raise ValueError('empty string `delete_on_termination`; Enter "yes" or "no" (default) to delete the volume/block device upon termination of the instance.')
+            
+            if "volume_size" not in volume:
+                raise ValueError('empty string `size`; Enter the size of the volume to create (in gigabytes).')
+            
+            if 'volume_type' not in volume:
+                raise ValueError('empty string `volume_type`; Enter the volume type that will be used, for example SSD or HDD storage (check OpenStack for the correct names).')
+
+            # create the volume
+            # https://github.com/openstack/python-cinderclient/blob/af3bc66a5fe2a1ab37d537b6cfe1f5dfb5659002/cinderclient/v3/volumes.py#L74
+            vol = self.cinder_client.volumes.create(
+                size=int(volume['volume_size']), 
+                volume_type=volume['volume_type']
+            )
+
+            # give a time to Openstack finalise the volume creations ...
+            log.debug("volume.id={0} built, recent volume.status={1}".format(vol.id, vol.status))
+
+            while waited < max_wait and vol.status != 'available':
+                # FIXME: Configurable poll interval
+                sleep(1)
+                waited = waited + 1
+                log.debug("volume.id={0} built, recent volume.status={1} => STILL WAITING".format(vol.id, vol.status))
+                vol = self.cinder_client.volumes.get(vol.id)
+            sleep(60)
+            # append to the list
+            log.debug("volume.id={0} built, recent volume.status={1} => READY TO GO!".format(vol.id, vol.status))
+
+            volumes_to_attach.append({
+                'delete_on_termination': bool(strtobool(volume['delete_on_termination'])),
+                'volume': vol
+            })        
+
+        return volumes_to_attach
+
+
+    def _get_attached_volumes(self, vm_id):
+        """Return list of available volumes attached to a VM."""
+        self._init_os_api()
+        volumes =  list(volume.to_dict() 
+            for volume in self.nova_client.volumes.get_server_volumes(vm_id))
+        
+        # get name
+        for volume in volumes:
+            volume['name'] = self.cinder_client.volumes.get(volume['volumeId']).name
+        return volumes
 
     @memoize(120)
     def _get_flavors(self):

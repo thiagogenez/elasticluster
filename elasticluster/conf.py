@@ -257,9 +257,14 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("request_floating_ip"): boolean,  ## DEPRECATED, place in cluster or node config
         Optional("region_name"): nonempty_str,
         Optional("availability_zone"): nonempty_str,
+        # 
+        # compute_api_version versions:
         # 2.67 to allow `volume_type` when using `block_device_mapping_v2`
         # https://docs.openstack.org/nova/latest/user/block-device-mapping.html#block-device-mapping-v2
-        Optional("compute_api_version"): Or('1.1', '2', '2.67'), 
+        #
+        # 2.79 to allow the use of 'delete_on_termination' when attaching a volume to a VM
+        # https://github.com/openstack/python-novaclient/blob/d3b4c01ea4e6e5c4bca9e961a36806b533faa9ac/novaclient/v2/volumes.py#L89
+        Optional("compute_api_version"): Or('1.1', '2', '2.67', '2.79'), 
         Optional("image_api_version"): Or('1', '2'),
         Optional("network_api_version"): Or('2.0'),
         Optional("volume_api_version"): Or('1', '2', '3'),

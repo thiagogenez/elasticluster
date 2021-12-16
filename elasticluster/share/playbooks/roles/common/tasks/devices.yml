@@ -3,25 +3,25 @@
 # Format anc create a new volume
 #
 
-- name: Does device '{{device.path}}' exists?
-  ansible.builtin.command: lsblk -n -o TYPE '{{device.path}}'
+- name: Does device '{{device.name}}' exists?
+  ansible.builtin.command: lsblk -n -o TYPE '{{device.name}}'
 
 
-- name: Create partition {{device.path}}{{device.number}} if it doesn't exist with {{device.fs_type}} filesystem
+- name: Create partition {{device.name}}{{device.number}} if it doesn't exist with {{device.fs_type}} filesystem
   community.general.parted:
-    device: '{{device.path}}'
+    device: '{{device.name}}'
     number: '{{device.number}}'
     state: present
   
-- name: Create a '{{device.fs_type}}' filesystem on {{device.path}}{{device.number}}
+- name: Create a '{{device.fs_type}}' filesystem on {{device.name}}{{device.number}}
   community.general.filesystem:
     force: no
     fstype: '{{device.fs_type}}'
-    dev: '{{device.path}}{{device.number}}'
+    dev: '{{device.name}}{{device.number}}'
 
 
-- name: Check if the device {{device.path}}{{device.number}} already contains a monted volume '{{device.mountpoint}}'
-  ansible.builtin.command: lsblk -n -o MOUNTPOINT '{{device.path}}{{device.number}}'
+- name: Check if the device {{device.name}}{{device.number}} already contains a monted volume '{{device.mountpoint}}'
+  ansible.builtin.command: lsblk -n -o MOUNTPOINT '{{device.name}}{{device.number}}'
   register: already_mounted_check
 
 
@@ -31,8 +31,8 @@
   when: 'already_mounted_check.stdout_lines[0] is defined and already_mounted_check.stdout_lines[0] != device.mountpoint'
 
 
-- name: Get the UUID of the device {{device.path}}{{device.number}} 
-  ansible.builtin.command: blkid '{{device.path}}{{device.number}}' -s UUID -o value
+- name: Get the UUID of the device {{device.name}}{{device.number}} 
+  ansible.builtin.command: blkid '{{device.name}}{{device.number}}' -s UUID -o value
   register: uuid_check
   when: 'already_mounted_check.stdout_lines[0] is not defined '
 
