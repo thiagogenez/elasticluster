@@ -4,6 +4,21 @@
 - name: Load distribution-specific parameters
   include_tasks: 'init-{{ansible_os_family}}.yml'
 
+- name: Add groups to the system
+  ansible.builtin.group:
+    name: '{{item}}'
+    state: present
+  loop: '{{customer_groups}}'
+  when: 'item is defined'
+
+- name: Populate the system
+  include_tasks: add-user.yml
+  vars:
+    user: '{{item}}'
+  when: 'item is defined'
+  loop: '{{customer_users | from_yaml}}'
+
+
 - import_tasks: db.yml
 
 - import_tasks: install-slurmdbd.yml

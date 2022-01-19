@@ -1,0 +1,16 @@
+---
+
+- name: Adding user '{{user.username}}'
+  ansible.builtin.user:
+    name: '{{ user.username}}'
+    shell: /bin/bash
+    groups: '{{user.groups | default([""]) | from_yaml | join(",") }}'
+    append: yes
+    home: '{{ user.home }}/{{ user.username }}'
+    move_home: no
+
+- name: Setting authorized key for user '{{user.username}}'
+  ansible.posix.authorized_key:
+    user: '{{user.username}}'
+    state: present
+    key: https://github.com/{{user.github_username}}.keys

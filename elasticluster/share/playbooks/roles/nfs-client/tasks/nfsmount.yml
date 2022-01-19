@@ -1,10 +1,5 @@
 ---
 
-- name: bla
-  debug:
-    msg: '{{fs}}'
-
-
 - name: ensure {{fs.mountpoint}} directory exists
   ansible.builtin.file:
     path: "{{fs.mountpoint}}"

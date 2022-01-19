@@ -41,7 +41,7 @@
         /sbin/shutdown -r now "Rebooting to enable SELinux ...";
       async: 1
       poll: 0
-    - name: Wait for the reboot to complete if there was a change.
+    - name: Wait for the reboot to complete before rebooting worker and login nodes
       wait_for_connection:
         connect_timeout: 20
         sleep: 5

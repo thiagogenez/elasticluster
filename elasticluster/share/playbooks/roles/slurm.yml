@@ -3,12 +3,39 @@
 - name: Slurm master Playbook
   hosts: slurm_master
   tasks:
+    - name: Add groups to the system
+      ansible.builtin.group:
+        name: '{{item}}'
+        state: present
+      loop: '{{customer_groups}}'
+      when: 'item is defined'
+
+    - name: Populate the cluster
+      ansible.builtin.user:
+        name: '{{ item.username }}'
+        shell: /bin/bash
+        groups: '{{item.groups | default([""]) | from_yaml | join(",") }}'
+        append: yes
+        home: '{{ item.home }}/{{ item.username }}'
+        move_home: no
+      loop: '{{customer_users | from_yaml}}'
+      when: 'item is defined'
+    
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: '{{item.username}}'
+        state: present
+        key: https://github.com/{{item.github_username}}.keys
+      loop: '{{customer_users | from_yaml}}'
+      when: 'item is defined'
+
     - name: Include the NIS role
       include_role:
         name: 'nis'
       vars:
         NIS_MASTER: "{{groups.slurm_master[0]}}"
       when: 'multiuser_cluster|default("true")|bool'
+
     - name: Create the values for the variable NFS_EXPORTS 
       vars: 
         clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
@@ -18,14 +45,13 @@
           clients: "{{ clients }}"  
       loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}' 
       register: NFS_EXPORTS_TMP
-    - name: bla
-      debug:
-        msg: "{{ NFS_EXPORTS_TMP.results | map(attribute='ansible_facts.nsf_export') | list }}"
+
     - name: Include the NFS-server role
       include_role:
         name: 'nfs-server'
       vars: 
         NFS_EXPORTS: "{{ NFS_EXPORTS_TMP.results | map(attribute='ansible_facts.nsf_export') | list | to_json }}"
+
     - name: Include the 'slurm-master' role
       include_role:
         name: 'slurm-master'
@@ -40,7 +66,6 @@
   import_playbook: slurm-clients.yml
   vars:
     host: slurm_submit:slurm_client
-
 
 
 - name: Restart SLURMd after all config is done
