@@ -3,32 +3,6 @@
 - name: Slurm master Playbook
   hosts: slurm_master
   tasks:
-    - name: Add groups to the system
-      ansible.builtin.group:
-        name: '{{item}}'
-        state: present
-      loop: '{{customer_groups}}'
-      when: 'item is defined'
-
-    - name: Populate the cluster
-      ansible.builtin.user:
-        name: '{{ item.username }}'
-        shell: /bin/bash
-        groups: '{{item.groups | default([""]) | from_yaml | join(",") }}'
-        append: yes
-        home: '{{ item.home }}/{{ item.username }}'
-        move_home: no
-      loop: '{{customer_users | from_yaml}}'
-      when: 'item is defined'
-    
-    - name: Set authorized key taken from file
-      ansible.posix.authorized_key:
-        user: '{{item.username}}'
-        state: present
-        key: https://github.com/{{item.github_username}}.keys
-      loop: '{{customer_users | from_yaml}}'
-      when: 'item is defined'
-
     - name: Include the NIS role
       include_role:
         name: 'nis'
@@ -42,7 +16,8 @@
       set_fact:
         nsf_export: 
           path: "{{ item.server_path }}" 
-          clients: "{{ clients }}"  
+          clients: "{{ clients }}"
+          options: "sync,rw,no_root_squash,no_subtree_check,crossmnt"  
       loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}' 
       register: NFS_EXPORTS_TMP
 

@@ -12,17 +12,20 @@
   when: 'item is defined'
 
 - name: Populate the system
-  include_tasks: add-user.yml
+  include_tasks: add-non-system-user.yml
   vars:
     user: '{{item}}'
   when: 'item is defined'
   loop: '{{customer_users | from_yaml}}'
 
+- name: Update NIS/YP databases (NIS master server)
+  command: |
+    make
+  args:
+    chdir: /var/yp
 
 - import_tasks: db.yml
-
 - import_tasks: install-slurmdbd.yml
-
 - import_tasks: install-slurmctld.yml
 
 - name: Create cluster in accounting database

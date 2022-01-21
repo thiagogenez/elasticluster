@@ -2,7 +2,7 @@
 
 - name: Adding user '{{user.username}}'
   ansible.builtin.user:
-    name: '{{ user.username}}'
+    name: '{{ user.username }}'
     shell: /bin/bash
     groups: '{{user.groups | default([""]) | from_yaml | join(",") }}'
     append: yes
