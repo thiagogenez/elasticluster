@@ -46,6 +46,7 @@
       - vim
       - htop
       - netcat
+      - wget
       # https://github.com/s3fs-fuse/s3fs-fuse#installation
       - s3fs-fuse
     state: '{{ pkg_install_state }}'

@@ -27,6 +27,7 @@
       when: 'is_debian_compatible'
   roles:
     - role: common
+    - role: storage
     #- role: iptables
     #  # FIXME: should change to 'DROP' when all playbooks register their input ports!
     #  default_input_policy: 'ACCEPT'

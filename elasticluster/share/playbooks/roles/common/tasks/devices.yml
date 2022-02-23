@@ -1,6 +1,6 @@
 ---
 #
-# Format anc create a new volume
+# Mount a volume
 #
 
 - name: Does device '{{device.name}}' exists?

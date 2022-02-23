@@ -39,4 +39,6 @@
       - screen
       - tmux
       - vim
+      # https://github.com/s3fs-fuse/s3fs-fuse#installation
+      - s3fs
     state: '{{ pkg_install_state }}'
