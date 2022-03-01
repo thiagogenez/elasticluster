@@ -1,16 +1,14 @@
 ---
-
 - name: Mount volumes (aka devices)
   include_tasks: volume.yml
   vars:
-    device: '{{item}}'
-  when: 'item is defined'
-  loop: '{{VOLUMES  | from_yaml | default([]) }}'
-
+    device: "{{item}}"
+  when: "item is defined"
+  loop: "{{VOLUMES  | from_yaml | default([]) }}"
 
 - name: Mount buckets
   include_tasks: bucket.yml
   vars:
-    service: '{{item}}'
-  when: 'item is defined'
-  loop: '{{BUCKETS  | from_yaml | default([]) }}'
+    service: "{{item}}"
+  when: "item is defined"
+  loop: "{{BUCKETS  | from_yaml | default([]) }}"

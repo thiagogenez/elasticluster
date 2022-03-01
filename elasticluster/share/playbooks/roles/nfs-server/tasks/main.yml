@@ -31,19 +31,35 @@
 # exports need to be there before attempting to install/start the
 # server, otherwise the service startup script might refuse to start
 # the NFS server
-- name: Export directories
+
+# - name: Export directories
+#   tags:
+#     - nfs
+#     - nfs-server
+#   lineinfile:
+#     dest: '/etc/exports'
+#     create: yes
+#     backup: yes
+#     line: '{{item.path}} {% for client in item.clients %}{{client}}({{item.options|default("async,rw,no_root_squash,no_subtree_check,crossmnt")}}) {% endfor %}'
+#     # replace clients+options on the given path
+#     regexp: '^ *{{item.path}} +'
+#     state: present
+#   loop: '{{NFS_EXPORTS}}'
+
+- name: Export directories (using templates)
   tags:
     - nfs
     - nfs-server
-  lineinfile:
-    dest: '/etc/exports'
-    create: yes
+  vars:
+    NFS_EXPORTS: '{{ NFS_EXPORTS }}'
+  ansible.builtin.template:
+    src: "etc/exports.j2"
+    dest: "/etc/exports"
     backup: yes
-    line: '{{item.path}} {% for client in item.clients %}{{client}}({{item.options|default("async,rw,no_root_squash,no_subtree_check,crossmnt")}}) {% endfor %}'
-    # replace clients+options on the given path
-    regexp: '^ *{{item.path}} +'
-    state: present
-  loop: '{{NFS_EXPORTS}}'
+    owner: root
+    group: root
+    mode: '0600'
+  
 
 
 - name: Ensure portmapper is running

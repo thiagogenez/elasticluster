@@ -17,8 +17,9 @@
         nsf_export: 
           path: "{{ item.server_path }}" 
           clients: "{{ clients }}"
-          options: "sync,rw,no_root_squash,no_subtree_check,crossmnt"  
-      loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}' 
+          options: '{{ item.server_options | default("sync,rw,no_root_squash,no_subtree_check,crossmnt") }}' 
+          is_bucket:  '{{ item.is_bucket|default("no")|bool }}'
+      loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home"}]) | from_yaml }}' 
       register: NFS_EXPORTS_TMP
 
     - name: Include the NFS-server role
