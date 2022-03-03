@@ -122,7 +122,7 @@
     src: '{{ item.from }}'
     state: link
     force: yes
-  ignore_errors: yes
+  ignore_errors: True
   loop:
     - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
   when: is_debian_compatible

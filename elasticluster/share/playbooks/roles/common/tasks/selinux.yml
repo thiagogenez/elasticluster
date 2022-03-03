@@ -30,5 +30,5 @@
 
 - name: Wait for server to come up again
   wait_for_connection: 
-  delegate_to: localhost
+#  delegate_to: localhost
   when: '_selinux_disable_reboot is not skipped'

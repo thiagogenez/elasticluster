@@ -44,6 +44,7 @@
     - name: Wait for the reboot to complete before rebooting worker and login nodes
       wait_for_connection:
 
+
 ## HACKY
 - name: Reboot SLURM worker and login nodes
   tags:
@@ -60,3 +61,16 @@
         /sbin/shutdown -r "Rebooting to enable SELinux ...";
       async: 1
       poll: 0
+
+- name: Broadcasting message
+  tags:
+    - after
+    - local
+  hosts: all
+  # by default these are no-op (empty task list)
+  roles: []
+  tasks: 
+    - name: Broadcasting message
+      shell: |  
+        wall -n " Cluster is now live. Enjoy it =)"
+      become: yes

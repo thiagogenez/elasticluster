@@ -16,4 +16,16 @@
   hosts: all
   # by default these are no-op (empty task list)
   roles: []
-  tasks: []
+  tasks:
+    - name: Broadcasting message
+      shell: |  
+        wall -n " Cluster is under maintenance. Please, log out now and log back in later."
+      become: yes
+    - name: Editing MOTd 
+      shell: |
+        cat > /etc/motd << EOF
+          
+          *** Slurm is currently being installed/configured in the background. ***
+          A terminal broadcast will announce when installation and configuration is complete.
+        
+        EOF
