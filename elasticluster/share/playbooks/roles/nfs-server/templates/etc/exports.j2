@@ -1,0 +1,11 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+{% for item in NFS_EXPORTS | from_yaml %}
+{%- set uuid = range(1, 100) | random | to_uuid -%}
+{{item.path}} {% for client in item.clients %}{{client}}{% if item.is_bucket == true%}(fsid={{ uuid }},{% else %}({% endif %}{{item.options}}) {% endfor %}
+
+{% endfor %}

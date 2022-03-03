@@ -195,6 +195,7 @@ __EOF__
                     ;;
             esac
             sudo yum install -y libeatmydata
+            sudo yum install -y https://repo.percona.com/yum/release/7/RPMS/x86_64/libeatmydata-0.1-00.21.el7.centos.x86_64.rpm
             ;;
     esac
     # create wrapper script to call Python with libeatmydata preloaded

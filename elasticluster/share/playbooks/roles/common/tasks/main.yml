@@ -6,14 +6,6 @@
   when: use_proxy
 - include_tasks: 'init-{{ansible_os_family}}.yml'
 
-# - name: Mount devices
-#   include_tasks: devices.yml
-#   vars:
-#     device: '{{item}}'
-#   when: 'item is defined'
-#   loop: '{{DEVICES  | from_yaml | default([]) }}'
-
-
 - include_tasks: hosts.yml
   vars:
     hosts: '{{groups.all}}'

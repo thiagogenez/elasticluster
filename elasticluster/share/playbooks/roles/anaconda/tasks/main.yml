@@ -71,8 +71,8 @@
   ansible.builtin.command: '{{anaconda_home}}/bin/conda update -y {{item}}'
   loop:
     - conda
-#    - anaconda
-#    - --all
+    - anaconda
+    - --all
 
 - name: Customise system conda
   ansible.builtin.command: '{{anaconda_home}}/bin/conda config --system --set {{item.key}} {{item.value}}'
@@ -110,7 +110,7 @@
   
 - name: Create conda shared_env
   ansible.builtin.command: '{{anaconda_home}}/bin/conda create -n {{item.name}} -y {{item.pkgs | from_yaml |join(" ") }}'
-  become: yes
+  become: True
   become_user: '{{anaconda_username}}'
   loop: '{{anaconda_shared_env| from_yaml }}'
   when: 'item is defined'

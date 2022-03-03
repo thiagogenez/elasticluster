@@ -10,7 +10,7 @@ export PATH="{{anaconda_home}}/bin:${PATH}"
 export PYTHON{{anaconda_python_version}}="{{anaconda_home}}/bin/python{{anaconda_python_version}}"
 
 
-# HACKY: Shared environtment 
+# HACK: Shared environtment 
 if [ $UID != 0 ] && [ "$USER" != {{anaconda_username}} ]; then
     export ANACONDA_SHARED_HOME="{{anaconda_shared}}"
     export CONDA_PKGS_DIRS="{{anaconda_shared}}/pkgs","{{anaconda_home}}/pkgs","/home/$USER/.conda/pkgs"

@@ -1,5 +1,11 @@
 ---
 
+- name: Umount bucket first to avoid "Stale file handle" error
+  ansible.posix.mount:
+    path: '{{ fs.mountpoint }}'
+    state: "unmounted"
+  when: 'fs.is_bucket == true'
+
 - name: ensure {{fs.mountpoint}} directory exists
   ansible.builtin.file:
     path: "{{fs.mountpoint}}"
@@ -7,7 +13,7 @@
 
 - name: add to /etc/fstab
   ansible.posix.mount:
-    name: '{{ fs.mountpoint }}'
+    path: '{{ fs.mountpoint }}'
     src: "{{ fs.fs }}"
     fstype: nfs
     opts: '{{ fs.options|default("rw,async") }}'

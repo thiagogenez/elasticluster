@@ -35,7 +35,7 @@
     # we know about the `apt:` module but cannot use it here,
     # so suppress warning
     warn: no
-  become: yes
+  become: True
 
 - name: Uninstall `aptitude`
   # since Ansible 2.6, the `apt` module conflicts with `aptitude` when
@@ -48,7 +48,7 @@
     # we know about the `apt:` module but cannot use it here,
     # so suppress warning
     warn: no
-  become: yes
+  become: True
 
 - name: Install Ansible `pip` module dependencies
   apt:
@@ -101,7 +101,7 @@
   when: 'allow_reboot|default(false) and debian_kernel_upgraded|default(false)'
 
 - name: Wait for server to come up again (max 5 minutes)
-  become: no
+  become: False
   wait_for:
     host: "{{ ansible_host }}"
     search_regex: 'OpenSSH'

@@ -18,6 +18,7 @@
           fs: '{{server}}:{{item.server_path}}'
           mountpoint: '{{item.client_mountpoint}}'
           options: '{{ item.client_options | default("rw,async") }}'
+          is_bucket:  '{{ item.is_bucket|default("no")|bool }}'
       loop: '{{ slurm_nfs_mountpoints | default([{"server_path": "/home", "client_mountpoint": "/home"}]) | from_yaml }}'
       register: NFS_MOUNTS_TMP
 
