@@ -38,10 +38,10 @@
       # is torn by the reboot and Ansible marks the host as "unreachable"
       shell: |
         sleep 3;
-        /sbin/shutdown -r now "Rebooting to enable SELinux ...";
+        /sbin/reboot
       async: 1
       poll: 0
-    - name: Wait for the reboot to complete before rebooting worker and login nodes
+    - name: Wait the controller node to be back on line before rebooting worker and login nodes
       wait_for_connection:
 
 

@@ -28,3 +28,12 @@
   loop_control:
     loop_var: bucket_item
 
+
+- name: Deploy fuse.conf
+  ansible.builtin.template:
+    src: "etc/fuse.conf.j2"
+    dest: "/etc/fuse.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  
