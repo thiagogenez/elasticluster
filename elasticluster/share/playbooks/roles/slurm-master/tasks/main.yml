@@ -8,7 +8,7 @@
   ansible.builtin.group:
     name: '{{item}}'
     state: present
-  loop: '{{customer_groups}}'
+  loop: '{{SLURM_MASTER_USER_GROUPS}}'
   when: 'item is defined'
 
 - name: Populate the system
@@ -16,7 +16,23 @@
   vars:
     user: '{{item}}'
   when: 'item is defined'
-  loop: '{{customer_users | from_yaml}}'
+  loop: '{{SLURM_MASTER_USERS | from_yaml}}'
+
+- name: Mount buckets
+  include_tasks: install-bucket.yml
+  vars:
+    service: "{{item}}"
+  when: "item is defined"
+  loop: "{{SLURM_MASTER_BUCKETS  | from_yaml | default([]) }}"
+
+- name: Mount volumes (aka devices)
+  include_tasks: volume.yml
+  vars:
+    device: "{{item}}"
+  when: "item is defined"
+  loop: "{{SLURM_MASTER_VOLUMES  | from_yaml | default([]) }}"
+
+
 
 - name: Update NIS/YP databases (NIS master server)
   command: |
