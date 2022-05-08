@@ -19,6 +19,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 import sys
+
 python_version = sys.version_info[:2]
 if not (python_version == (2, 7) or python_version >= (3, 5)):
     raise RuntimeError("ElastiCluster requires Python 2.7 or 3.5+")
@@ -37,7 +38,8 @@ except ImportError:
 # time of this writing) and this version number is likely to increase with time
 # -- so just pick a "known good one".
 from ez_setup import use_setuptools
-use_setuptools(version='21.0.0')
+
+use_setuptools(version="21.0.0")
 
 
 ## auxiliary functions
@@ -46,7 +48,7 @@ def read_whole_file(path):
     """
     Return file contents as a string.
     """
-    with open(path, 'r') as stream:
+    with open(path, "r") as stream:
         return stream.read()
 
 
@@ -57,6 +59,7 @@ def read_whole_file(path):
 #
 from setuptools.command.test import test as TestCommand
 
+
 class Tox(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -66,6 +69,7 @@ class Tox(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import tox
+
         errno = tox.cmdline(self.test_args)
         sys.exit(errno)
 
@@ -76,14 +80,16 @@ from setuptools import setup, find_packages
 
 setup(
     name="elasticluster",
-    version='1.3.dev28',
+    version="1.3.dev28",
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
-    long_description=read_whole_file('README.rst'),
-    author=", ".join([
-        'Nicolas Baer',
-        'Antonio Messina',
-        'Riccardo Murri',
-    ]),
+    long_description=read_whole_file("README.rst"),
+    author=", ".join(
+        [
+            "Nicolas Baer",
+            "Antonio Messina",
+            "Riccardo Murri",
+        ]
+    ),
     author_email="riccardo.murri@gmail.com",
     license="LGPL",
     keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
@@ -114,65 +120,71 @@ setup(
     packages=find_packages(),
     include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
-        'console_scripts': [
-            'elasticluster = elasticluster.__main__:main',
+        "console_scripts": [
+            "elasticluster = elasticluster.__main__:main",
         ]
     },
-    setup_requires=['Babel>=2.3.4,!=2.4.0'],  # see Issue #268
+    setup_requires=["Babel>=2.3.4,!=2.4.0"],  # see Issue #268
     install_requires=[
         # ElastiCluster core requirements
-        'future',
-        'pip>=9.0.0',  ## see issue #433
+        "future",
+        "pip>=9.0.0",  ## see issue #433
         #'ara',  # optional
-        'PyCLI',
-        'ansible-core',
-        'ansible',
-        'click>=4.0',  ## click.prompt() added in 4.0
-        'coloredlogs',
-        'netaddr',
-        'paramiko>=2.7',  ## see issue #647
-        'schema',
-        'subprocess32',  ## stdlib subprocess but correct under multithreading
+        "PyCLI",
+        "ansible-core",
+        "ansible",
+        "click>=4.0",  ## click.prompt() added in 4.0
+        "coloredlogs",
+        "netaddr",
+        "paramiko>=2.7",  ## see issue #647
+        "cryptography==36.0.2",  ## see https://github.com/paramiko/paramiko/issues/2038#issuecomment-1112740435
+        "schema",
+        "subprocess32",  ## stdlib subprocess but correct under multithreading
         # Azure cloud
-        'azure-common',
-        'azure-mgmt-compute',
-        'azure-mgmt-network',
-        'azure-mgmt-resource',
-        'msrestazure',
+        "azure-common",
+        "azure-mgmt-compute",
+        "azure-mgmt-network",
+        "azure-mgmt-resource",
+        "msrestazure",
         # EC2 clouds
-        'boto>=2.48',
-        'pycrypto',   # for computing RSA key hash, see: PR #132
+        "boto>=2.48",
+        "pycrypto",  # for computing RSA key hash, see: PR #132
         # Google Cloud
-        'google-api-python-client',
-        'google-compute-engine',
-        'oauth2client',
-        'python-gflags',
-        'pytz',   ## required by `positional` but somehow not picked up
-        'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
+        "google-api-python-client",
+        "google-compute-engine",
+        "oauth2client",
+        "python-gflags",
+        "pytz",  ## required by `positional` but somehow not picked up
+        "simplejson>=2.5.0",  # needed by `uritemplate` but somehow not picked up
         # OpenStack
-        'netifaces',
-        'apache-libcloud>=0.14.0',
-        'requests~=2.16',  ## see issue #441 and #566
-        'python-keystoneclient',
-        'python-glanceclient',
-        'python-neutronclient',
-        'python-cinderclient',
-        'python-novaclient',
+        "netifaces",
+        "apache-libcloud>=0.14.0",
+        "requests~=2.16",  ## see issue #441 and #566
+        "python-keystoneclient",
+        "python-glanceclient",
+        "python-neutronclient",
+        "python-cinderclient",
+        "python-novaclient",
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier
         # which is not picked up by `pip` because it's not
         # a top-level dependency of ElastiCluster
-        'Babel>=2.3.4,!=2.4.0',
-        'pbr>=2.0.0,!=2.1.0',
+        "Babel>=2.3.4,!=2.4.0",
+        "pbr>=2.0.0,!=2.1.0",
         ## the following 6 are all required dependencies
         ## which are not picked up, see issue #500
         'enum34; python_version<"3.4"',
         'functools32; python_version<"3.2"',
-        'ipaddress',
+        "ipaddress",
         'pathlib2; python_version<"3.4"',
-        'scandir',
-        'secretstorage<=2.3.1',
+        "scandir",
+        "secretstorage<=2.3.1",
     ],
-    tests_require=['tox', 'mock', 'pytest-coverage', 'pytest>=2.10'],  # read right-to-left
-    cmdclass={'test': Tox},
+    tests_require=[
+        "tox",
+        "mock",
+        "pytest-coverage",
+        "pytest>=2.10",
+    ],  # read right-to-left
+    cmdclass={"test": Tox},
 )
