@@ -58,11 +58,11 @@
 #- import_playbook: roles/jenkins.yml
 #- import_playbook: roles/kubernetes.yml
 #- import_playbook: roles/pbspro.yml
-# - import_playbook: roles/slurm.yml
+- import_playbook: roles/slurm.yml
 #- import_playbook: roles/torque.yml
 
 # add-on software
-# - import_playbook: roles/anaconda.yml
+- import_playbook: roles/anaconda.yml
 #- import_playbook: roles/ansible.yml
 #- import_playbook: roles/easybuild.yml
 #- import_playbook: roles/ganglia.yml

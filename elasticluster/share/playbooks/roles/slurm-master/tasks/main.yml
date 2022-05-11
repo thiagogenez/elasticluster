@@ -1,22 +1,21 @@
 # slurm-master/tasks/main.yml
 ---
-
 - name: Load distribution-specific parameters
-  include_tasks: 'init-{{ansible_os_family}}.yml'
+  include_tasks: "init-{{ansible_os_family}}.yml"
 
 - name: Add groups to the system
   ansible.builtin.group:
-    name: '{{item}}'
+    name: "{{item}}"
     state: present
-  loop: '{{SLURM_MASTER_USER_GROUPS}}'
-  when: 'item is defined'
+  loop: "{{customer_groups}}"
+  when: "item is defined"
 
 - name: Populate the system
   include_tasks: add-non-system-user.yml
   vars:
-    user: '{{item}}'
-  when: 'item is defined'
-  loop: '{{SLURM_MASTER_USERS | from_yaml}}'
+    user: "{{item}}"
+  when: "item is defined"
+  loop: "{{customer_users | from_yaml}}"
 
 - name: Mount buckets
   include_tasks: install-bucket.yml
@@ -26,13 +25,11 @@
   loop: "{{SLURM_MASTER_BUCKETS  | from_yaml | default([]) }}"
 
 - name: Mount volumes (aka devices)
-  include_tasks: volume.yml
+  include_tasks: install-volume.yml
   vars:
     device: "{{item}}"
   when: "item is defined"
   loop: "{{SLURM_MASTER_VOLUMES  | from_yaml | default([]) }}"
-
-
 
 - name: Update NIS/YP databases (NIS master server)
   command: |
@@ -80,8 +77,8 @@
     - slurm
     - multiuser
   copy:
-    dest: '/etc/{{item}}.d/slurm'
-    src:  'etc/{{item}}.d/slurm'
+    dest: "/etc/{{item}}.d/slurm"
+    src: "etc/{{item}}.d/slurm"
     owner: root
     group: root
     mode: 0555
@@ -95,8 +92,8 @@
     - slurm
     - slurmctld
   service:
-    name: '{{item}}'
+    name: "{{item}}"
     enabled: yes
     state: started
   loop:
-    - '{{slurmctld_service_name}}'
+    - "{{slurmctld_service_name}}"

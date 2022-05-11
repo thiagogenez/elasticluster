@@ -2,7 +2,7 @@
 # This var is a temp location until a better place is proposed to be place!
 
 # list of volumes to be attach on the correspondent machine
-VOLUMES: '{{ attach_volumes }}'
+SLURM_MASTER_VOLUMES: "{{ attach_volumes }}"
 
 # list of buckets to be attach on the correspondent machine
-BUCKETS: '{{ buckets }}'
+SLURM_MASTER_BUCKETS: "{{ buckets }}"

@@ -1,4 +1,2 @@
 ---
 # This var is a temp location until a better place is proposed to be place!
-# DEVICES: '{{ attach_volumes }}'
-

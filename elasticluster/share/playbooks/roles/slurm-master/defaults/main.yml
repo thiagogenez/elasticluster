@@ -1,7 +1,2 @@
 ---
-
 SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
-SLURM_MASTER_VOLUMES: []
-SLURM_MASTER_BUCKETS: []
-SLURM_MASTER_USER_GROUPS: []
-SLURM_MASTER_USERS: []
