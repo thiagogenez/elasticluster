@@ -6,39 +6,34 @@
 - name: Does device '{{device.name}}' exists?
   ansible.builtin.command: lsblk -n -o TYPE '{{device.name}}'
 
-
 - name: Create partition {{device.name}}{{device.number}} if it doesn't exist with {{device.fs_type}} filesystem
   community.general.parted:
-    device: '{{device.name}}'
-    number: '{{device.number}}'
+    device: "{{device.name}}"
+    number: "{{device.number}}"
     state: present
-  
+
 - name: Create a '{{device.fs_type}}' filesystem on {{device.name}}{{device.number}}
   community.general.filesystem:
     force: no
-    fstype: '{{device.fs_type}}'
-    dev: '{{device.name}}{{device.number}}'
-
+    fstype: "{{device.fs_type}}"
+    dev: "{{device.name}}{{device.number}}"
 
 - name: Check if the device {{device.name}}{{device.number}} already contains a monted volume '{{device.mountpoint}}'
   ansible.builtin.command: lsblk -n -o MOUNTPOINT '{{device.name}}{{device.number}}'
   register: already_mounted_check
 
-
 - name: Sanity check for the requested path "{{device.mountpoint}}"
   fail:
     msg: Volume 'already_mounted_check.stdout_lines[0]' is already mounted and it differs from the requested "{{device.mountpoint}}"
-  when: 'already_mounted_check.stdout_lines[0] is defined and already_mounted_check.stdout_lines[0] != device.mountpoint'
+  when: "already_mounted_check.stdout_lines[0] is defined and already_mounted_check.stdout_lines[0] != device.mountpoint"
 
-
-- name: Get the UUID of the device {{device.name}}{{device.number}} 
+- name: Get the UUID of the device {{device.name}}{{device.number}}
   ansible.builtin.command: blkid '{{device.name}}{{device.number}}' -s UUID -o value
   register: uuid_check
-  when: 'already_mounted_check.stdout_lines[0] is not defined '
-
+  when: "already_mounted_check.stdout_lines[0] is not defined "
 
 - name: Mount new volumes and create fstab entries
-  ansible.posix.mount: 
+  ansible.posix.mount:
     path: "{{device.mountpoint}}"
     src: "UUID={{uuid_check.stdout_lines[0]}}"
     fstype: "{{device.fs_type}}"
@@ -46,3 +41,14 @@
     state: "mounted"
   when: uuid_check.stdout_lines[0] is defined
 
+# https://fixyacloud.wordpress.com/2020/01/26/df-says-disk-is-full-but-it-is-not/
+- name: Remove LINUX filesystems space reserved (default 5%) for use only the root user
+  ansible.builtin.shell: |
+    tune2fs -m {{device.reserved_block_size}} {{device.name}}{{device.number}}
+  become: yes
+  when: "device.fs_type != 'xfs'"
+
+- name: Applying chgrp
+  ansible.builtin.shell: |
+    chgrp -R {{device.chgrp}} {{device.mountpoint}}
+  when: "device.chgrp is defined"

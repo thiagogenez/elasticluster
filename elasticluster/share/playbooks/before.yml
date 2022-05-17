@@ -18,14 +18,14 @@
   roles: []
   tasks:
     - name: Broadcasting message
-      shell: |  
-        wall -n " Cluster is under maintenance. Please, log out now and log back in later."
+      shell: |
+        wall -n " *** Cluster is currently under maintenance in the background. Please, be aware of any instability during this time. ***"
       become: yes
-    - name: Editing MOTd 
+    - name: Editing MOTd
       shell: |
         cat > /etc/motd << EOF
           
           *** Slurm is currently being installed/configured in the background. ***
           A terminal broadcast will announce when installation and configuration is complete.
-        
+
         EOF
