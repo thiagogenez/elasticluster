@@ -17,20 +17,6 @@
   when: "item is defined"
   loop: "{{customer_users | from_yaml}}"
 
-- name: Mount buckets
-  include_tasks: install-bucket.yml
-  vars:
-    service: "{{item}}"
-  when: "item is defined"
-  loop: "{{SLURM_MASTER_BUCKETS  | from_yaml | default([]) }}"
-
-- name: Mount volumes (aka devices)
-  include_tasks: install-volume.yml
-  vars:
-    device: "{{item}}"
-  when: "item is defined"
-  loop: "{{SLURM_MASTER_VOLUMES  | from_yaml | default([]) }}"
-
 - name: Update NIS/YP databases (NIS master server)
   command: |
     make

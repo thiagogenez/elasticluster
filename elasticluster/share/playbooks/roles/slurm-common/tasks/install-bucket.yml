@@ -1,24 +1,21 @@
 ---
-
 - name: Defining a name for the credential file
   ansible.builtin.set_fact:
     credential_file: "/etc/passwd-s3fs.{{ service.hostname }}"
-    
 
 - name: Deploy s3fs credential file
   vars:
-    ACCESS_KEY_ID: '{{ service.access_key_id }}'
-    ACCESS_SECRET_KEY: '{{ service.access_secret_key }}'
+    ACCESS_KEY_ID: "{{ service.access_key_id }}"
+    ACCESS_SECRET_KEY: "{{ service.access_secret_key }}"
   ansible.builtin.template:
     src: "etc/passwd-s3fs.j2"
     dest: "{{ credential_file }}"
     owner: root
     group: root
-    mode: '0600'
-  
+    mode: "0400"
 
 - name: Mount new volumes and create fstab entries
-  ansible.posix.mount: 
+  ansible.posix.mount:
     path: "{{ bucket_item.mountpoint }}"
     src: "{{ bucket_item.name }}"
     fstype: "fuse.s3fs"
@@ -28,12 +25,10 @@
   loop_control:
     loop_var: bucket_item
 
-
 - name: Deploy fuse.conf
   ansible.builtin.template:
     src: "etc/fuse.conf.j2"
     dest: "/etc/fuse.conf"
     owner: root
     group: root
-    mode: '0644'
-  
+    mode: "0644"

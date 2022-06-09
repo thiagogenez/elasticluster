@@ -1,8 +1,6 @@
 ---
-
 - name: Load distribution-specific parameters
-  include_tasks: 'init-{{ansible_os_family}}.yml'
-
+  include_tasks: "init-{{ansible_os_family}}.yml"
 
 # Otherwise `systemctl mask $someservice` fails on RHEL/CentOS7
 - name: Temporarily put SELinux in "permissive" mode (RHEL-family)
@@ -10,7 +8,6 @@
     policy: targeted
     state: permissive
   when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
-
 
 # need to do this here, as the SLURM packages are not yet installed
 - name: Create `slurm` system group
@@ -20,7 +17,6 @@
   tags:
     - slurm
 
-
 - name: Create `slurm` system user
   user:
     name: slurm
@@ -29,7 +25,6 @@
     create_home: no
   tags:
     - slurm
-
 
 # It can happen that, if SLURM is already installed (for instance when
 # starting from a snapshot, or when reconfiguring a cluster),
@@ -67,19 +62,18 @@
     fi
     exit 0
   loop:
-    - { new: '/etc/slurm',     old: '/etc/slurm-llnl' }
-    - { new: '/var/lib/slurm', old: '/var/lib/slurm-llnl' }
-    - { new: '/var/log/slurm', old: '/var/log/slurm-llnl' }
-    - { new: '/var/run/slurm', old: '/var/run/slurm-llnl' }
+    - { new: "/etc/slurm", old: "/etc/slurm-llnl" }
+    - { new: "/var/lib/slurm", old: "/var/lib/slurm-llnl" }
+    - { new: "/var/log/slurm", old: "/var/log/slurm-llnl" }
+    - { new: "/var/run/slurm", old: "/var/run/slurm-llnl" }
   when: is_debian_compatible
   tags:
     - slurm
     - debian
 
-
 - name: Create work directory "{{item}}"
   file:
-    path: '{{item}}'
+    path: "{{item}}"
     state: directory
     owner: slurm
     group: slurm
@@ -95,82 +89,74 @@
   tags:
     - slurm
 
-
 # Debian/Ubuntu packages place configuration in `/etc/slurm-llnl` and
 # logs in `/var/log/slurm-llnl` -- symlink this to `/etc/slurm` and
 # `/var/log/slurm` etc. so we need not worry about varying paths in
 # playbooks and config files
 - name: Make compatibility symlinks
   file:
-    path: '{{ item.to }}'
-    src: '{{ item.from }}'
+    path: "{{ item.to }}"
+    src: "{{ item.from }}"
     state: link
     force: yes
   loop:
-    - { from: '/etc/slurm',     to: '/etc/slurm-llnl' }
-    - { from: '/var/lib/slurm', to: '/var/lib/slurm-llnl' }
-    - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
+    - { from: "/etc/slurm", to: "/etc/slurm-llnl" }
+    - { from: "/var/lib/slurm", to: "/var/lib/slurm-llnl" }
+    - { from: "/var/log/slurm", to: "/var/log/slurm-llnl" }
   when: is_debian_compatible
   tags:
     - slurm
     - debian
 
-
 - name: Make compatibility symlinks (optional)
   file:
-    path: '{{ item.to }}'
-    src: '{{ item.from }}'
+    path: "{{ item.to }}"
+    src: "{{ item.from }}"
     state: link
     force: yes
   ignore_errors: True
   loop:
-    - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
+    - { from: "/var/run/slurm", to: "/var/run/slurm-llnl" }
   when: is_debian_compatible
   tags:
     - slurm
     - debian
-
 
 - name: Enable Copr SLURM repo by verdurin
   tags:
     - slurm
   template:
     src: copr-slurm.repo.j2
-    dest: '/etc/yum.repos.d/copr-slurm.repo'
+    dest: "/etc/yum.repos.d/copr-slurm.repo"
     mode: 0444
   when: is_rhel_compatible
 
-
 - import_tasks: munge.yml
-
 
 - name: Deploy SLURM configuration file
   tags:
     - slurm
   template:
     src: '{{ slurm_conf_file|default("slurm.conf.j2") }}'
-    dest: '/etc/slurm/slurm.conf'
+    dest: "/etc/slurm/slurm.conf"
     owner: root
     group: root
     mode: 0444
-
 
 - name: Install support packages (Debian/Ubuntu)
   package:
     name:
       - libopenmpi-dev
       - openmpi-bin
-    state: '{{ pkg_install_state }}'
+    state: "{{ pkg_install_state }}"
   when: is_debian_or_ubuntu
-
 
 - name: Install SLURM packages (RHEL-compatible)
   package:
     name:
       - openmpi-devel
-    state: '{{ pkg_install_state }}'
-  when: 'is_rhel_compatible'
-
+    state: "{{ pkg_install_state }}"
+  when: "is_rhel_compatible"
 
 - name: Enable SELinux (RHEL-family)
   selinux:
@@ -186,10 +172,23 @@
 - name: Install Slurm MOTD
   tags:
     - slurm
-  copy:
-    src=etc/motd
+  copy: src=etc/motd
     dest=/etc/motd
     owner=root
     group=root
     mode=0644
-  when: 'is_rhel_compatible'
+  when: "is_rhel_compatible"
+
+- name: Mount buckets
+  include_tasks: install-bucket.yml
+  vars:
+    service: "{{item}}"
+  when: "item is defined"
+  loop: "{{SLURM_BUCKETS  | from_yaml | default([]) }}"
+
+- name: Mount volumes (aka devices)
+  include_tasks: install-volume.yml
+  vars:
+    device: "{{item}}"
+  when: "item is defined"
+  loop: "{{SLURM_VOLUMES  | from_yaml | default([]) }}"

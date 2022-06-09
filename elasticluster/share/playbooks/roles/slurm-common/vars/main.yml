@@ -1,0 +1,8 @@
+---
+# This var is a temp location until a better place is proposed to be place!
+
+# list of buckets to be attach on the correspondent machine
+SLURM_BUCKETS: "{{ slurm_buckets }}"
+
+# list of volumes to be attach on the correspondent machine
+SLURM_VOLUMES: "{{ attach_volumes }}"

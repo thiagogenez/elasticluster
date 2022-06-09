@@ -48,7 +48,7 @@
   become: yes
   when: "device.fs_type != 'xfs'"
 
-- name: Applying chgrp
+- name: Applying chmod -R o+w
   ansible.builtin.shell: |
-    chgrp -R {{device.chgrp}} {{device.mountpoint}}
+    chmod o+w {{device.mountpoint}}
   when: "device.chgrp is defined"

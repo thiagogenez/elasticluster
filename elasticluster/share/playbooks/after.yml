@@ -16,17 +16,16 @@
   hosts: all
   # by default these are no-op (empty task list)
   roles: []
-  tasks: 
+  tasks:
     - name: Disable SELinux on next reboot
       replace:
-        path: '/etc/selinux/config'
-        regexp: '^ *SELINUX=.*'
-        replace: 'SELINUX=permissive'
+        path: "/etc/selinux/config"
+        regexp: "^ *SELINUX=.*"
+        replace: "SELINUX=permissive"
         backup: yes
 
-
 ## HACKY
-- name: Reboot SLURM Controller  
+- name: Reboot SLURM Controller
   tags:
     - after
     - local
@@ -43,7 +42,6 @@
       poll: 0
     - name: Wait the controller node to be back on line before rebooting worker and login nodes
       wait_for_connection:
-
 
 ## HACKY
 - name: Reboot SLURM worker and login nodes
@@ -69,8 +67,8 @@
   hosts: all
   # by default these are no-op (empty task list)
   roles: []
-  tasks: 
+  tasks:
     - name: Broadcasting message
-      shell: |  
+      shell: |
         wall -n " Cluster is now live. Enjoy it =)"
       become: yes
